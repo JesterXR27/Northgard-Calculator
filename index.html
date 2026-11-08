@@ -124,12 +124,12 @@ const MODULES=[
  {id:"wilderness",name:"Wilderness expansion"}
 ];
 const DIE={
- x2:{t:"2x combat points",p:2,c:0},
- x3:{t:"3x combat points",p:3,c:0},
- choice:{t:"Choice: 1 casualty or 1 combat point",p:0,c:0},
- x2c:{t:"2x combat points AND 1 casualty",p:2,c:1},
- cc:{t:"2x casualties",p:0,c:2},
- x1c:{t:"1 combat point AND 1 casualty",p:1,c:1}
+ x2:{t:"2x Axes",p:2,c:0},
+ x3:{t:"3x Axes",p:3,c:0},
+ choice:{t:"Skull or Axe",p:0,c:0},
+ x2c:{t:"2x Axes & 1x Skull",p:2,c:1},
+ cc:{t:"2x Skulls",p:0,c:2},
+ x1c:{t:"1x Axe & 1x Skull",p:1,c:1}
 };
 const $=id=>document.getElementById(id);
 const num=v=>Math.max(0,parseInt(v,10)||0);
@@ -195,11 +195,11 @@ function renderBody(s){
  h+=`<div class="row"><div>${field(s,"units","Units in combat")}</div><div>${field(s,"food","Food tokens spent")}<p class="hint" id="${s}-fh"></p></div></div>`;
  h+=s==="a"?field(s,"bonus","Bonus axes (Move card, clan powers)"):field(s,"bonus","Other bonus axes (clan powers)")+(pv?field(s,"fort","Fortresses (+2 each)"):`<div class="row"><div>${field(s,"fort","Fortresses (+2 each)")}</div><div>${field(s,"tower","Defense Towers (1 casualty each)")}</div></div>`);
  if(clan==="Bear")h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="kaija" ${c.kaija?"checked":""}>Kaija is in this combat (counts as one of the units, worth 2 axes)</label>`;
- if(clan==="Snake")h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="scorch" ${c.scorch?"checked":""}>Scorched Earth token is in this territory (+1 axis)</label>`;
+ if(clan==="Snake")h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="scorch" ${c.scorch?"checked":""}>Scorched Earth token is in this territory (+1 axe)</label>`;
  if(S.modules.warchiefs&&WC[clan]){const w=WC[clan];
   h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="wc" ${c.wc?"checked":""}>Warchief ${w.n} is in this combat (one unit, worth 2 axes)</label>`;
   if(c.wc){
-   if(clan==="Boar")h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="terr" ${c.terr?"checked":""}>Territory is open or has a wood resource (+1 axis)</label>`;
+   if(clan==="Boar")h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="terr" ${c.terr?"checked":""}>Territory is open or has a wood resource (+1 axe)</label>`;
    h+=`<p class="hint">${w.t}</p>`}}
  if(!pv)h+=field(s,"extra","Extra casualties inflicted on the opponent (cards, clan powers)");
  $(s+"-body").innerHTML=h;
@@ -210,7 +210,7 @@ function renderRoll(s){
  let h=`<label for="${s}-die">Die result</label><select id="${s}-die" data-side="${s}" data-k="die"><option value="">Not rolled yet</option>${Object.entries(DIE).map(([k,v])=>`<option value="${k}" ${c.die===k?"selected":""}>${v.t}</option>`).join("")}</select>`;
  h+=`<div id="${s}-pick" class="${c.die==="choice"?"":"hide"}"><label class="chk"><input type="radio" name="${s}-pk" data-side="${s}" data-k="pick" value="c" ${c.pick==="c"?"checked":""}>Take the casualty</label><label class="chk"><input type="radio" name="${s}-pk" data-side="${s}" data-k="pick" value="p" ${c.pick==="p"?"checked":""}>Take the combat point</label>${s==="a"?'<p class="hint">The attacker decides before the defender rolls.</p>':""}</div>`;
  if(isCr(s))h=h.replace(/<div id="[ad]-pick".*$/s,"")+'<p class="hint">The player to the left of the player fighting the creature rolls this die. A Choice result is always a combat point.</p>';
- else if(M.mode==="pvc")h+='<p class="hint">Casualties dealt to a creature don’t count, so take the combat point on a Choice result.</p>';
+ else if(M.mode==="pvc")h+='<p class="hint">Casualties (skulls) dealt to a creature don’t count, so take the combat point on a Choice result.</p>';
  if(!isCr(s)&&S.modules.warchiefs&&clanOf(s)==="Raven"&&c.wc)h+='<p class="hint">Liv: you may reroll once and must keep the new result. As attacker, reroll before the defender rolls. Enter the final result.</p>';
  $(s+"-roll").innerHTML=h;
 }
