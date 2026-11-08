@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northgard Combat Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--ink:#070b1c;--navy:#141c3b;--navy2:#0e1530;--silver:#c2cee0;--silver2:#6f819d;--text:#eaf0f8;--mute:#a7b4c8;--gold:#e8c065;--gold2:#b48a38;--atk:#ee8c3c;--atk2:#7b3a1a;--def:#5aa9ff;--def2:#1c4a80}
+*{box-sizing:border-box}
+html{background:#0a1028}
+body{margin:0;color:var(--text);font:17px/1.5 "Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;
+ background:radial-gradient(ellipse 70% 45% at 50% -8%,#3a54a0 0,transparent 70%),radial-gradient(ellipse 50% 35% at 6% 105%,rgba(236,150,60,.26),transparent 70%),linear-gradient(#18224a,#101836 55%,#0a1028);background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:.09;
+ background-image:radial-gradient(#fff 1px,transparent 1.6px),radial-gradient(#fff 1px,transparent 1.6px);background-size:130px 130px,83px 83px;background-position:0 0,45px 62px}
+body::after{content:"";position:fixed;left:0;right:0;bottom:0;height:150px;z-index:-1;pointer-events:none;background:linear-gradient(#0a1030,#060a1c);opacity:.75;
+ clip-path:polygon(0 100%,0 62%,9% 34%,15% 52%,24% 18%,33% 56%,41% 38%,50% 64%,60% 22%,69% 50%,78% 30%,88% 58%,94% 40%,100% 60%,100% 100%)}
+header{padding:28px 16px 6px;max-width:980px;margin:0 auto;text-align:center}
+h1{font:700 clamp(1.1rem,4.6vw,1.9rem)/1.2 Montserrat,"Segoe UI",system-ui,sans-serif;margin:0;letter-spacing:.24em;text-transform:uppercase;padding-left:.24em;
+ background:linear-gradient(#ffffff,#b9c6da 55%,#7f90ab);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.runes{color:var(--silver2);letter-spacing:.55em;font-size:.95rem;margin:8px 0 6px}
+header p.band{position:relative;display:inline-block;margin:6px 0 0;padding:6px 34px;background:rgba(8,13,34,.62);border-top:1px solid var(--silver2);border-bottom:1px solid var(--silver2);font:600 .78rem Montserrat,system-ui,sans-serif;letter-spacing:.34em;text-transform:uppercase;color:var(--silver)}
+header p.band::before,header p.band::after{content:"";position:absolute;top:50%;width:7px;height:7px;background:var(--silver2);transform:translateY(-50%) rotate(45deg)}
+header p.band::before{left:12px}header p.band::after{right:12px}
+header p.tag{margin:10px 0 0;color:var(--mute);font-size:.95rem}
+h2{font:700 .95rem Montserrat,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;margin:0 0 12px;color:var(--silver)}
+section>h2{display:flex;align-items:center;gap:14px;margin:0 0 16px}
+section>h2::before,section>h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--silver2))}
+section>h2::after{transform:scaleX(-1)}
+nav{display:flex;gap:6px;max-width:980px;margin:18px auto 0;padding:0 16px}
+nav button{flex:1;padding:12px;border:1px solid var(--silver2);border-bottom:0;background:linear-gradient(#232e5c,#161f43);color:var(--mute);font:700 .78rem Montserrat,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;border-radius:8px 8px 0 0;cursor:pointer}
+nav button[aria-selected=true]{color:#fff;background:linear-gradient(#2d3b75,#1b2650);box-shadow:inset 0 3px 0 var(--gold)}
+main{max-width:980px;margin:0 auto;padding:0 16px 170px;position:relative}
+section,.side,#result{border:1px solid var(--silver2);background:linear-gradient(180deg,rgba(28,39,80,.96),rgba(15,22,48,.97));
+ box-shadow:inset 0 0 0 4px var(--navy),inset 0 0 0 5px rgba(194,206,224,.5),0 10px 26px rgba(0,0,0,.5)}
+section{border-radius:0 0 10px 10px;padding:26px 24px}
+.hide{display:none!important}
+@media(max-width:720px){.prow{grid-template-columns:1fr 1fr}.prow>div:first-child{grid-column:1/-1}}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}section{padding:24px 16px}}
+.side{position:relative;border-radius:8px;padding:18px 16px 18px}
+.side>h2{margin:-13px -11px 14px;padding:13px 70px 13px 16px;color:#fff;background:linear-gradient(90deg,var(--c2),rgba(8,13,34,.95) 88%);border-left:5px solid var(--c);border-bottom:1px solid var(--silver2);border-radius:3px 3px 0 0}
+.side.a{--c:var(--atk);--c2:var(--atk2)}.side.d{--c:var(--def);--c2:var(--def2)}
+.badge{position:absolute;top:9px;right:13px;z-index:2;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font:800 1.2rem Montserrat,system-ui,sans-serif;color:#fff;background:radial-gradient(circle at 35% 30%,#3d4a82,#151c3c);border:3px solid var(--gold);box-shadow:0 0 0 2px var(--ink),0 3px 8px rgba(0,0,0,.55)}
+label{display:block;margin:10px 0 3px;font-size:.92rem;color:var(--mute)}
+.chk{display:flex;gap:10px;align-items:center;color:var(--text);font-size:1rem;margin:12px 0}
+select,input[type=number],input[type=text]{width:100%;padding:10px;border-radius:5px;border:1px solid var(--silver2);background:#0a1026;color:var(--text);font:inherit;font-size:16px;box-shadow:inset 0 2px 5px rgba(0,0,0,.6)}
+input[type=checkbox],input[type=radio]{width:20px;height:20px;accent-color:var(--gold);flex:none}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prow{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px;margin-bottom:8px}
+button.act{padding:11px 22px;border-radius:6px;border:1px solid #3d4a66;background:linear-gradient(#f2f6fb,#9eb0c9);color:#0e1530;font:700 .78rem Montserrat,system-ui,sans-serif;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;box-shadow:0 3px 0 #3d4a66,inset 0 1px 0 #fff}
+button.act:active{transform:translateY(2px);box-shadow:0 1px 0 #3d4a66}
+.mods{display:grid;gap:4px}.mods small{color:var(--mute);margin-left:30px;margin-top:-6px}
+.hint{color:var(--mute);font-size:.9rem;margin:4px 0 0}
+#result{margin-top:22px;border-radius:8px;padding:20px 20px;border-color:var(--gold2);box-shadow:inset 0 0 0 4px var(--navy),inset 0 0 0 5px rgba(232,192,101,.55),0 10px 26px rgba(0,0,0,.5)}
+#result .win{font:800 1.45rem/1.2 Montserrat,system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin:0 0 8px;text-shadow:0 2px 4px rgba(0,0,0,.6)}
+#result{position:relative;overflow:hidden}
+#result::before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:var(--tc,transparent)}
+.win .dot{display:inline-block;width:.72em;height:.72em;border-radius:50%;margin-right:.55em;border:2px solid #fff;box-shadow:0 0 0 2px var(--ink)}
+table{width:100%;border-collapse:collapse;margin:10px 0}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid #35467a}
+th{color:var(--silver);font:700 .75rem Montserrat,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+ul{margin:8px 0 0;padding-left:22px}
+li::marker{color:var(--gold2)}
+.warn{color:#ff9a86}
+footer{max-width:980px;margin:-130px auto 0;padding:0 16px 28px;text-align:center;color:var(--mute);font-size:.8rem;position:relative}
+#pin{display:none;position:fixed;left:0;right:0;bottom:0;z-index:5;width:100%;text-align:left;border:0;border-top:2px solid var(--silver2);background:linear-gradient(#222d5c,#121a3c);color:var(--text);font:inherit;font-size:.95rem;line-height:1.35;padding:10px 16px;cursor:pointer;box-shadow:0 -6px 16px rgba(0,0,0,.55)}
+#pin b{display:block;font:800 .95rem Montserrat,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+#pin span{display:block;color:var(--mute)}
+@media(max-width:720px){#pin.on{display:block}footer{margin-top:-60px;padding-bottom:110px}main{padding-bottom:150px}.badge{width:40px;height:40px;font-size:1.05rem}.side>h2{padding-right:62px}}
+</style>
+</head>
+<body>
+<header>
+<h1>Northgard Combat Calculator</h1>
+<div class="runes" aria-hidden="true">ᚠ ᚢ ᚦ ᚨ ᚱ ᚲ ᚷ ᚹ</div>
+<p class="band">Uncharted Lands</p>
+<p class="tag">Set up your table once, then resolve every fight in one screen.</p>
+</header>
+<nav role="tablist">
+<button role="tab" id="t-setup" aria-selected="true">Game setup</button>
+<button role="tab" id="t-combat" aria-selected="false">Combat</button>
+</nav>
+<main>
+
+<section id="p-setup">
+<h2>Modules in play</h2>
+<div class="mods" id="mods"></div>
+<h2 style="margin-top:22px">Players</h2>
+<label for="count">Number of players</label>
+<select id="count"></select>
+<div id="players" style="margin-top:12px"></div>
+<p class="hint warn" id="dupe"></p>
+<p class="hint">Saved in this browser, so the table is still set up when you come back.</p>
+<button class="act" id="go">Go to combat</button>
+</section>
+
+<section id="p-combat" class="hide">
+<div id="modebar"></div>
+<h2 style="margin-top:14px">Set up the fight</h2>
+<div class="grid">
+<div class="side a"><span class="badge bd-a" title="Combat score">0</span><h2 id="a-h">Attacker</h2><div id="a-pw"><label for="a-pid">Player</label><select id="a-pid" data-side="a"></select></div><div id="a-body"></div></div>
+<div class="side d"><span class="badge bd-d" title="Combat score">0</span><h2 id="d-h">Defender</h2><div id="d-pw"><label for="d-pid">Player</label><select id="d-pid" data-side="d"></select></div><div id="d-body"></div></div>
+</div>
+<h2 style="margin-top:22px">Roll the dice</h2>
+<div class="grid">
+<div class="side a"><span class="badge bd-a" title="Combat score">0</span><h2 id="a-rh">Attacker</h2><div id="a-roll"></div></div>
+<div class="side d"><span class="badge bd-d" title="Combat score">0</span><h2 id="d-rh">Defender</h2><div id="d-roll"></div></div>
+</div>
+<div id="result" aria-live="polite"></div>
+<p style="margin-top:14px"><button class="act" id="reset">Clear combat</button></p>
+</section>
+</main>
+<footer>Unofficial fan-made tool, not affiliated with or endorsed by the makers of Northgard: Uncharted Lands. Northgard and its artwork belong to their respective owners.</footer>
+<button id="pin" type="button" aria-label="Combat result summary. Tap to jump to the full result."></button>
+
+<script>
+const CLANS=["No clan","Bear","Boar","Goat","Raven","Snake","Stag","Wolf"];
+/* Modules: add rules here as each expansion is defined. */
+const MODULES=[
+ {id:"creatures",name:"Creatures Module"},
+ {id:"warchiefs",name:"Warchiefs expansion"},
+ {id:"wilderness",name:"Wilderness expansion"}
+];
+const DIE={
+ x2:{t:"2x combat points",p:2,c:0},
+ x3:{t:"3x combat points",p:3,c:0},
+ choice:{t:"Choice: 1 casualty or 1 combat point",p:0,c:0},
+ x2c:{t:"2x combat points AND 1 casualty",p:2,c:1},
+ cc:{t:"2x casualties",p:0,c:2},
+ x1c:{t:"1 combat point AND 1 casualty",p:1,c:1}
+};
+const $=id=>document.getElementById(id);
+const num=v=>Math.max(0,parseInt(v,10)||0);
+let S={modules:{},players:[{name:"Player 1",clan:"No clan"},{name:"Player 2",clan:"No clan"}]};
+try{const s=JSON.parse(localStorage.getItem("ng-calc")||"null");if(s&&s.players)S=s}catch(e){}
+const save=()=>{try{localStorage.setItem("ng-calc",JSON.stringify(S))}catch(e){}};
+const COLORS={Red:"#d9473f",Blue:"#4a8fe0",Green:"#4fae5f",Yellow:"#e8c65a",Purple:"#9560c8"};
+const CNAMES=Object.keys(COLORS);
+const nextColor=()=>CNAMES.find(c=>!S.players.some(p=>p.color===c))||CNAMES[0];
+S.players.length=Math.min(S.players.length,CNAMES.length);
+S.players.forEach(p=>{if(!COLORS[p.color])p.color=nextColor()});
+const blank=()=>({pid:"",units:"",bonus:"",food:"",die:"",pick:"c",extra:"",fort:"",tower:"",kaija:false,scorch:false,wc:false,terr:false});
+let C={a:blank(),d:blank()};
+/* Creatures. mod = module that supplies it, v = combat value, f = fame, share = shares its territory with a player,
+   nobld = buildings have no effect, gone = removed from the game when eliminated, wyv = Wyvern rules, t = note shown on its card */
+const CRE={
+ bear:{mod:"creatures",n:"Brown Bear",v:6,f:3,share:true},
+ draugr:{mod:"creatures",n:"Draugr",v:5,f:2,share:true},
+ valkyrie:{mod:"creatures",n:"Fallen Valkyrie",v:7,f:4,share:false},
+ wolf:{mod:"creatures",n:"Wolf",v:4,f:1,share:true},
+ jotunn:{mod:"wilderness",n:"Draugr Jötunn",v:8,f:5,share:true,t:"Players can enter and stay in its territory without fighting it. When it enters a controlled territory, that player pays two resources or it attacks."},
+ eldthurs:{mod:"wilderness",n:"Eldthurs",v:8,f:5,share:true},
+ hvedrung:{mod:"wilderness",n:"Hvedrung",v:7,f:4,share:true},
+ spectral:{mod:"wilderness",n:"Spectral Warrior",v:4,f:1,share:true,nobld:true,gone:true,t:"Buildings in its territory have no effect, so Fortresses are ignored."},
+ wyvern:{mod:"wilderness",n:"Wyvern",v:9,f:6,share:false,wyv:true,t:"Before combat the player removes one unit from the board. Do that first, then enter the units still in combat."}
+};
+const creList=()=>{const r={};for(const[i,c]of Object.entries(CRE))if(S.modules[c.mod]&&S.modules.creatures)r[i]=c;return r};
+/* Warchiefs, by clan. t = power text shown under the checkbox */
+const WC={
+ Bear:{n:"Borgild",t:"Borgild is worth 3 axes when defending (applied automatically)."},
+ Boar:{n:"Svarn",t:"Svarn is worth 3 axes in an open territory or one with a wood resource. Wood on buildings doesn’t count."},
+ Goat:{n:"Halvard",t:"As defender, Halvard ignores one casualty from the attacker (applied automatically)."},
+ Stag:{n:"Brand",t:"In Step 1 you may move a friendly unit from an adjacent territory in, ignoring Rough borders. Include it in the units above."},
+ Wolf:{n:"Egil",t:"Egil is worth 3 axes when attacking (applied automatically)."},
+ Raven:{n:"Liv",t:"In Step 4 Liv may reroll the die once. Enter the final result."},
+ Snake:{n:"Signy",t:"In Step 1 Signy may place the Scorched Earth token in her territory. Tick it above if you do."}
+};
+let M={mode:"pvp",cr:"wolf",role:"a"}; /* role = the side the player is on when fighting a creature */
+const isCr=s=>M.mode==="pvc"&&s===(M.role==="a"?"d":"a");
+
+/* ---------- setup ---------- */
+function renderSetup(){
+ $("mods").innerHTML=MODULES.map(m=>`<label class="chk"><input type="checkbox" data-mod="${m.id}" ${S.modules[m.id]?"checked":""} ${m.id==="wilderness"&&!S.modules.creatures?"disabled":""}>${m.name}</label>${m.id==="wilderness"&&!S.modules.creatures?"<small>Requires the Creatures Module.</small>":""}`).join("");
+ $("count").innerHTML=[2,3,4,5].map(n=>`<option ${n===S.players.length?"selected":""}>${n}</option>`).join("");
+ $("players").innerHTML=S.players.map((p,i)=>`<div class="prow"><div><label for="n${i}">Name</label><input type="text" id="n${i}" data-pi="${i}" data-f="name" value="${p.name.replace(/"/g,"&quot;")}"></div><div><label for="c${i}">Clan</label><select id="c${i}" data-pi="${i}" data-f="clan">${CLANS.map(c=>`<option ${c===p.clan?"selected":""}>${c}</option>`).join("")}</select></div><div><label for="k${i}">Team color</label><select id="k${i}" data-pi="${i}" data-f="color" style="border-left:8px solid ${COLORS[p.color]}">${CNAMES.map(c=>`<option ${c===p.color?"selected":""}>${c}</option>`).join("")}</select></div></div>`).join("");
+ dupeCheck();
+}
+function fillPlayers(){
+ ["a","d"].forEach(s=>{
+  const el=$(s+"-pid"),cur=C[s].pid;
+  el.innerHTML=`<option value="">Choose player</option>`+S.players.map((p,i)=>`<option value="${i}" ${String(i)===cur?"selected":""}>${p.name} (${p.clan}, ${p.color})</option>`).join("");
+  if(!S.players[cur]){C[s].pid="";el.value=""}
+ });
+}
+const clanOf=s=>{const p=S.players[C[s].pid];return p?p.clan:"No clan"};
+
+/* ---------- combat panels ---------- */
+function field(s,k,label,extra=""){return `<label for="${s}-${k}">${label}</label><input type="number" min="0" inputmode="numeric" id="${s}-${k}" data-side="${s}" data-k="${k}" value="${C[s][k]}" ${extra}>`}
+function renderBody(s){
+ if(isCr(s)){const k=CRE[M.cr];
+  $(s+"-body").innerHTML=`<table><tr><td>Creature</td><td>${k.n}</td></tr><tr><td>Combat value</td><td>${k.v}</td></tr><tr><td>Fame if defeated</td><td>${k.f}</td></tr><tr><td>Shares its territory</td><td>${k.share?"Yes":"No"}</td></tr></table><p class="hint">Creatures spend no food and have no bonuses.${k.t?" "+k.t:""}</p>`;return}
+ const pv=M.mode==="pvc",clan=clanOf(s),c=C[s];let h="";
+ h+=`<div class="row"><div>${field(s,"units","Units in combat")}</div><div>${field(s,"food","Food tokens spent")}<p class="hint" id="${s}-fh"></p></div></div>`;
+ h+=s==="a"?field(s,"bonus","Bonus axes (Move card, clan powers)"):field(s,"bonus","Other bonus axes (clan powers)")+(pv?field(s,"fort","Fortresses (+2 each)"):`<div class="row"><div>${field(s,"fort","Fortresses (+2 each)")}</div><div>${field(s,"tower","Defense Towers (1 casualty each)")}</div></div>`);
+ if(clan==="Bear")h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="kaija" ${c.kaija?"checked":""}>Kaija is in this combat (counts as one of the units, worth 2 axes)</label>`;
+ if(clan==="Snake")h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="scorch" ${c.scorch?"checked":""}>Scorched Earth token is in this territory (+1 axis)</label>`;
+ if(S.modules.warchiefs&&WC[clan]){const w=WC[clan];
+  h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="wc" ${c.wc?"checked":""}>Warchief ${w.n} is in this combat (one unit, worth 2 axes)</label>`;
+  if(c.wc){
+   if(clan==="Boar")h+=`<label class="chk"><input type="checkbox" data-side="${s}" data-k="terr" ${c.terr?"checked":""}>Territory is open or has a wood resource (+1 axis)</label>`;
+   h+=`<p class="hint">${w.t}</p>`}}
+ if(!pv)h+=field(s,"extra","Extra casualties inflicted on the opponent (cards, clan powers)");
+ $(s+"-body").innerHTML=h;
+}
+function renderRoll(s){
+ const c=C[s],p=S.players[c.pid];
+ $(s+"-rh").textContent=(s==="a"?"Attacker":"Defender")+(isCr(s)?": "+CRE[M.cr].n:p?": "+p.name:"");
+ let h=`<label for="${s}-die">Die result</label><select id="${s}-die" data-side="${s}" data-k="die"><option value="">Not rolled yet</option>${Object.entries(DIE).map(([k,v])=>`<option value="${k}" ${c.die===k?"selected":""}>${v.t}</option>`).join("")}</select>`;
+ h+=`<div id="${s}-pick" class="${c.die==="choice"?"":"hide"}"><label class="chk"><input type="radio" name="${s}-pk" data-side="${s}" data-k="pick" value="c" ${c.pick==="c"?"checked":""}>Take the casualty</label><label class="chk"><input type="radio" name="${s}-pk" data-side="${s}" data-k="pick" value="p" ${c.pick==="p"?"checked":""}>Take the combat point</label>${s==="a"?'<p class="hint">The attacker decides before the defender rolls.</p>':""}</div>`;
+ if(isCr(s))h=h.replace(/<div id="[ad]-pick".*$/s,"")+'<p class="hint">The player to the left of the player fighting the creature rolls this die. A Choice result is always a combat point.</p>';
+ else if(M.mode==="pvc")h+='<p class="hint">Casualties dealt to a creature don’t count, so take the combat point on a Choice result.</p>';
+ if(!isCr(s)&&S.modules.warchiefs&&clanOf(s)==="Raven"&&c.wc)h+='<p class="hint">Liv: you may reroll once and must keep the new result. As attacker, reroll before the defender rolls. Enter the final result.</p>';
+ $(s+"-roll").innerHTML=h;
+}
+
+/* ---------- calculation ---------- */
+function side(s){
+ const c=C[s],u=num(c.units),clan=clanOf(s),d=DIE[c.die]||{p:0,c:0};
+ const food=Math.min(num(c.food),u);
+ const kaija=clan==="Bear"&&c.kaija&&u>0?1:0, scorch=clan==="Snake"&&c.scorch?1:0;
+ const nb=M.mode==="pvc"&&CRE[M.cr]&&CRE[M.cr].nobld;
+ const fort=s==="d"&&!nb?num(c.fort)*2:0, tower=s==="d"?num(c.tower):0;
+ const w=S.modules.warchiefs&&WC[clan]&&c.wc?WC[clan]:null;
+ let wb=0;
+ if(w){wb=1;if((clan==="Bear"&&s==="d")||(clan==="Boar"&&c.terr)||(clan==="Wolf"&&s==="a"))wb=2}
+ const ign=w&&clan==="Goat"&&s==="d"?1:0;
+ let dp=d.p,dc=d.c;
+ if(c.die==="choice"){if(c.pick==="p")dp=1;else dc=1}
+ const parts=[["Units",u],["Kaija bonus",kaija],["Warchief bonus",wb],["Bonus axes",num(c.bonus)],["Scorched Earth",scorch],["Fortress",fort],["Food",food],["Die",dp]].filter(x=>x[1]);
+ return {u,clan,food,ign,wc:!!w,pts:parts.reduce((a,x)=>a+x[1],0),parts,
+  inflict:dc+num(c.extra)+tower,dieC:dc,tower,extra:num(c.extra),capped:num(c.food)>u};
+}
+function dupeCheck(){const seen={},d=[];S.players.forEach(p=>{if(seen[p.color]&&!d.includes(p.color))d.push(p.color);seen[p.color]=1});$("dupe").textContent=d.length?"More than one player has the team color "+d.join(", ")+".":""}
+const mix=(h,k)=>{const n=parseInt(h.slice(1),16),m=[11,16,48];return "#"+[n>>16,n>>8&255,n&255].map((v,i)=>Math.round(v*k+m[i]*(1-k)).toString(16).padStart(2,"0")).join("")};
+function applyColors(){
+ $("result").style.setProperty("--tc","transparent");
+ ["a","d"].forEach(s=>{
+  const p=!isCr(s)&&S.players[C[s].pid],hex=p&&COLORS[p.color];
+  document.querySelectorAll(".side."+s).forEach(el=>{
+   if(hex){el.style.setProperty("--c",hex);el.style.setProperty("--c2",mix(hex,.42))}
+   else{el.style.removeProperty("--c");el.style.removeProperty("--c2")}
+  });
+ });
+}
+function badge(s,v){document.querySelectorAll(".bd-"+s).forEach(e=>e.textContent=v)}
+function calc(){
+ ["a","d"].forEach(s=>{const e=$(s+"-fh");if(e)e.textContent=num(C[s].units)?`Max ${num(C[s].units)}`:"One per unit"});
+ applyColors();
+ if(M.mode==="pvc")return calcCr();
+ const A=side("a"),D=side("d"),R=$("result");
+ badge("a",A.pts);badge("d",D.pts);
+ if(!S.players[C.a.pid]||!S.players[C.d.pid]){R.innerHTML=`<p>Choose an attacker and a defender to start.</p>`;return}
+ if(C.a.pid===C.d.pid){R.innerHTML=`<p class="warn">The attacker and defender must be different players.</p>`;return}
+ if(!A.u||!D.u){R.innerHTML=`<p>Enter the number of units each side has in the combat.</p>`;return}
+ const pa=S.players[C.a.pid],pd=S.players[C.d.pid];
+ const recA=Math.max(0,D.inflict-A.ign),recD=Math.max(0,A.inflict-D.ign);
+ const aOut=recA>=A.u,dOut=recD>=D.u;
+ let win,why;
+ if(aOut&&dOut){win=null;why="Both sides lose every unit, so nobody wins."}
+ else if(aOut){win="d";why=`${pa.name} takes ${recA} casualties with ${A.u} units, so every unit is lost.`}
+ else if(dOut){win="a";why=`${pd.name} takes ${recD} casualties with ${D.u} units, so every unit is lost.`}
+ else if(A.pts>D.pts){win="a";why="The attacker has the higher combat score."}
+ else if(D.pts>A.pts){win="d";why="The defender has the higher combat score."}
+ else{win="d";why="Tied scores go to the defender."}
+ const rem=(u,r)=>Math.max(0,u-r);
+ const rA=rem(A.u,recA),rD=rem(D.u,recD);
+ const nm=win==="a"?pa.name:win==="d"?pd.name:null;
+ const rolled=C.a.die&&C.d.die;
+ const wp=win==="a"?pa:win==="d"?pd:null,wh=wp&&COLORS[wp.color];
+ R.style.setProperty("--tc",wh||"transparent");
+ let h=`<p class="win">${wh?`<span class="dot" style="background:${wh}"></span>`:""}${nm?nm+(wp?" ("+wp.color+")":"")+" wins":"No winner"}</p><p>${why}</p>`;
+ if(!rolled)h+=`<p class="hint">Dice are not entered for both sides yet, so this result is provisional.</p>`;
+ h+=`<table><tr><th></th><th>${pa.name} (attacker)</th><th>${pd.name} (defender)</th></tr>
+ <tr><td>Combat score</td><td>${A.pts}</td><td>${D.pts}</td></tr>
+ <tr><td>Casualties taken</td><td>${recA}</td><td>${recD}</td></tr>
+ <tr><td>Units left</td><td>${rA}</td><td>${rD}</td></tr></table>`;
+ const det=(X,p)=>`<li><b>${p.name}:</b> ${X.parts.map(x=>`${x[0]} ${x[1]}`).join(", ")||"no points"}${X.capped?" (food capped at one per unit)":""}</li>`;
+ h+=`<ul>${det(A,pa)}${det(D,pd)}</ul>`;
+ const notes=[];
+ const loser=win==="a"?"d":win==="d"?"a":null;
+ if(win==="a")notes.push(`${pa.name} takes ownership of the territory.`);
+ if(win==="d")notes.push(`${pd.name} keeps the territory.`);
+ if(loser){const left=loser==="a"?rA:rD,lp=loser==="a"?pa:pd;
+  notes.push(left>0?`${lp.name} retreats ${left} unit${left>1?"s":""} into adjacent friendly or neutral territories (regular border, no combat there). With no such territory, they return to reserve.`:`${lp.name} has no units left to retreat.`)}
+ if(win==="a"&&A.clan==="Wolf")notes.push(`Wolf clan: ${pa.name} collects 1 food token for winning as attacker.`);
+ if(D.ign)notes.push(`${pd.name}: Halvard ignored one casualty from the attacker.`);
+ if(A.wc||D.wc)notes.push("A warchief counts as one unit when casualties are applied. Its owner chooses whether it is removed, unless all units are lost.");
+ notes.push("Each player returns one unit to reserve per casualty taken.");
+ h+=`<ul>${notes.map(n=>`<li>${n}</li>`).join("")}</ul>`;
+ R.innerHTML=h;
+}
+
+function calcCr(){
+ const ps=M.role,cs=ps==="a"?"d":"a",P=side(ps),k=CRE[M.cr],cc=C[cs],pl=S.players[C[ps].pid],R=$("result");
+ badge(ps,P.pts);badge(cs,k.v+(cc.die==="choice"?1:(DIE[cc.die]||{p:0}).p));
+ if(!pl){R.innerHTML="<p>Choose the player who is fighting the creature.</p>";return}
+ if(!P.u){R.innerHTML="<p>Enter the number of units the player has in the combat.</p>";return}
+ const cd=DIE[cc.die]||{p:0,c:0},ch=cc.die==="choice";
+ const cpts=k.v+(ch?1:cd.p),rec=Math.max(0,(ch?0:cd.c)-P.ign),out=rec>=P.u;
+ let pw,why;
+ if(out){pw=false;why=`${pl.name} takes ${rec} casualties with ${P.u} units, so every unit is lost.`}
+ else if(P.pts>cpts){pw=true;why="The player has the higher combat score."}
+ else if(P.pts<cpts){pw=false;why="The creature has the higher combat score."}
+ else{pw=ps==="d";why=`Tied scores go to the defender, which is the ${pw?"player":"creature"}.`}
+ const left=Math.max(0,P.u-rec),rolled=C.a.die&&C.d.die,plural=n=>n>1?"s":"";
+ const role=ps==="a"?"attacker":"defender",crole=ps==="a"?"defender":"attacker";
+ const wh=pw&&COLORS[pl.color];
+ R.style.setProperty("--tc",wh||"transparent");
+ let h=`<p class="win">${wh?`<span class="dot" style="background:${wh}"></span>`:""}${pw?pl.name+" ("+pl.color+")":k.n} wins</p><p>${why}</p>`;
+ if(!rolled)h+=`<p class="hint">Dice are not entered for both sides yet, so this result is provisional.</p>`;
+ h+=`<table><tr><th></th><th>${pl.name} (${role})</th><th>${k.n} (${crole})</th></tr>
+ <tr><td>Combat score</td><td>${P.pts}</td><td>${cpts}</td></tr>
+ <tr><td>Casualties taken</td><td>${rec}</td><td>Not counted</td></tr>
+ <tr><td>Units left</td><td>${left}</td><td>n/a</td></tr></table>`;
+ h+=`<ul><li><b>${pl.name}:</b> ${P.parts.map(x=>`${x[0]} ${x[1]}`).join(", ")||"no points"}${P.capped?" (food capped at one per unit)":""}</li><li><b>${k.n}:</b> combat value ${k.v}${cpts>k.v?`, die ${cpts-k.v}`:""}</li></ul>`;
+ const n=[];
+ if(pw){n.push(`${pl.name} gains ${k.f} Fame token${plural(k.f)}.`);n.push(k.wyv?"Wyvern: if it was outside its Den, put it back on its Den. If it was inside its Den, remove it from the game.":k.gone?`Remove the ${k.n} miniature and its card from the game.`:`Remove the ${k.n} miniature and put its card on the creature discard pile.`);
+  if(ps==="a"&&P.clan==="Wolf")n.push(`Wolf clan: ${pl.name} collects 1 food token for winning as attacker.`)}
+ else if(left<1)n.push(`${pl.name} has no units left to retreat.`);
+ else if(ps==="a"&&k.share)n.push(`${k.n} shares its territory, so ${pl.name} does not retreat and leaves the units there.`);
+ else n.push(`${pl.name} retreats ${left} unit${plural(left)} into adjacent friendly or neutral territories (regular border, no combat there, and not where a creature is being attacked). With no such territory, they return to reserve.`);
+ if(!pw)n.push(`The ${k.n} stays on the board.`);
+ if(P.ign&&(ch?0:cd.c)>0)n.push("Halvard ignored one casualty from the creature.");
+ if(P.wc)n.push("A warchief counts as one unit when casualties are applied. Its owner chooses whether it is removed, unless all units are lost.");
+ if(rec)n.push(`${pl.name} returns ${rec} unit${plural(rec)} to reserve for casualties.`);
+ h+=`<ul>${n.map(x=>`<li>${x}</li>`).join("")}</ul>`;
+ R.innerHTML=h;
+}
+function renderMode(){
+ const el=$("modebar");
+ const L=creList();
+ if(!Object.keys(L).length){el.innerHTML="";return}
+ const o=(v,t,cur)=>`<option value="${v}" ${v===cur?"selected":""}>${t}</option>`;
+ el.innerHTML=`<div class="row"><div><label for="m-mode">Fight type</label><select id="m-mode" data-m="mode">${o("pvp","Player vs player",M.mode)}${o("pvc","Player vs creature",M.mode)}</select></div>`+
+ (M.mode==="pvc"?`<div><label for="m-cr">Creature</label><select id="m-cr" data-m="cr">${Object.entries(L).map(([i,c])=>o(i,c.n,M.cr)).join("")}</select></div></div><label for="m-role">Who attacks?</label><select id="m-role" data-m="role">${o("a","The player attacks the creature",M.role)}${o("d","The creature attacks the player",M.role)}</select>`:"</div>");
+}
+function refresh(){
+ const L=creList(),ks=Object.keys(L);
+ if(!ks.length)M.mode="pvp";else if(!L[M.cr])M.cr=ks[0];
+ renderMode();fillPlayers();
+ ["a","d"].forEach(s=>{
+  $(s+"-pw").classList.toggle("hide",isCr(s));
+  $(s+"-h").textContent=(s==="a"?"Attacker":"Defender")+(isCr(s)?": "+CRE[M.cr].n:"");
+  renderBody(s);renderRoll(s);
+ });
+ calc();
+}
+
+/* ---------- events ---------- */
+function show(tab){
+ const c=tab==="combat";
+ $("p-setup").classList.toggle("hide",c);$("p-combat").classList.toggle("hide",!c);
+ $("t-setup").setAttribute("aria-selected",!c);$("t-combat").setAttribute("aria-selected",c);
+ if(c)refresh();
+ updatePin();
+}
+$("t-setup").onclick=()=>show("setup");$("t-combat").onclick=()=>show("combat");$("go").onclick=()=>show("combat");
+$("reset").onclick=()=>{const a=C.a.pid,d=C.d.pid;C={a:blank(),d:blank()};C.a.pid=a;C.d.pid=d;refresh()};
+$("count").onchange=e=>{
+ const n=+e.target.value;
+ while(S.players.length<n)S.players.push({name:"Player "+(S.players.length+1),clan:"No clan",color:nextColor()});
+ S.players.length=n;save();renderSetup();
+};
+document.addEventListener("input",e=>{
+ const t=e.target;
+ if(t.dataset.m){const k=t.dataset.m;
+  if(k==="role"&&t.value!==M.role)[C.a,C.d]=[C.d,C.a];
+  M[k]=t.value;refresh();return}
+ if(t.dataset.mod){S.modules[t.dataset.mod]=t.checked;if(t.dataset.mod==="creatures"&&!t.checked)S.modules.wilderness=false;save();renderSetup();return}
+ if(t.dataset.pi!==undefined){S.players[+t.dataset.pi][t.dataset.f]=t.dataset.f==="name"?(t.value||"Player "+(+t.dataset.pi+1)):t.value;if(t.dataset.f==="color"){t.style.borderLeftColor=COLORS[t.value];dupeCheck()}save();return}
+ if(t.dataset.side&&t.id.endsWith("-pid")){const s=t.dataset.side;C[s].pid=t.value;C[s].kaija=false;C[s].scorch=false;C[s].wc=false;C[s].terr=false;renderBody(s);renderRoll(s);calc();return}
+ if(t.dataset.k){
+  const s=t.dataset.side,k=t.dataset.k;
+  C[s][k]=t.type==="checkbox"?t.checked:t.value;
+  if(k==="die"){const pk=$(s+"-pick");if(pk)pk.classList.toggle("hide",t.value!=="choice")}
+  if(k==="wc"){renderBody(s);renderRoll(s)}
+  calc();
+ }
+});
+/* ---------- pinned result bar (phones) ---------- */
+function updatePin(){
+ const p=$("pin"),r=$("result"),w=r.querySelector(".win"),rows=r.querySelectorAll("table tr");
+ if(!w||rows.length<3||$("p-combat").classList.contains("hide")){p.classList.remove("on");return}
+ const nm=c=>c.textContent.split(" (")[0],val=c=>/^\d+$/.test(c.textContent)?c.textContent:"–";
+ const h=rows[0].children,sc=rows[1].children,ca=rows[2].children;
+ p.innerHTML=`<b>${w.textContent}${r.querySelector(".hint")?" (dice pending)":""}</b><span>Score: ${nm(h[1])} ${val(sc[1])} vs ${nm(h[2])} ${val(sc[2])}</span><span>Casualties taken: ${nm(h[1])} ${val(ca[1])}, ${nm(h[2])} ${val(ca[2])}</span>`;
+ const tc=r.style.getPropertyValue("--tc");p.style.borderTopColor=tc&&tc!=="transparent"?tc:"";
+ p.classList.add("on");
+}
+new MutationObserver(updatePin).observe($("result"),{childList:true,subtree:true});
+$("pin").onclick=()=>$("result").scrollIntoView({behavior:"smooth",block:"center"});
+renderSetup();
+</script>
+</body>
+</html>
